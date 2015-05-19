@@ -1,0 +1,29 @@
+{
+  "name": "wage",
+  "version": "0.0.0",
+  "description": "A wage application",
+  "private": true,
+  "bin": {
+    "wage": "./bin/wage"
+  },
+  "scripts": {
+    "test": "mocha -R spec"
+  },
+  "author": {
+    "name": "Daniel Schmidt",
+    "email": "dschmidt@weluse.de",
+    "url": "https://github.com/DanielMSchmidt"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DanielMSchmidt/wage"
+  },
+  "license": "MIT",
+  "bugs": "https://github.com/DanielMSchmidt/wage/issues",
+  "dependencies": {
+    "commander": "~2.0.0",
+    "autocmdr": "~0.0.4"
+  },
+  "devDependencies": {
+  }
+}
