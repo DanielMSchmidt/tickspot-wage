@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 'use strict';
 
-var program  = require('commander');
+var program  = require('commander'),
+    nconf = require('nconf'),
+    inquirer = require('inquirer'),
+    deferred = require('deferred'),
+    moment = require('moment'),
+    request = require('request'),
+    parseString = require('xml2js').parseString,
+    fs = require('fs');
 
 require('autocmdr/lib/logger')(program);
 require('autocmdr/lib/loader')(program);
@@ -9,6 +16,98 @@ require('autocmdr/lib/completion')(program);
 require('autocmdr/lib/package')(program);
 require('autocmdr/lib/config')(program);
 
+var configPath = process.env['$NODE_CONFIG_DIR'] + '/.wageconfig';
+nconf.file({ file: configPath});
+
+var gatherInputs = function() {
+    var def = deferred();
+
+    inquirer.prompt([{
+        name: 'company',
+        message: 'The name of your company (used in the tickspot url)'
+    }, {
+        name: 'email',
+        message: 'Your E-Mail adress'
+    }, {
+        name: 'password',
+        message: 'Your password (it is only saved to YOUR filesystem)'
+    }, {
+        name: 'wagePerHour',
+        message: 'Your wage per hour'
+    }], function(answers) {
+        def.resolve(answers);
+    });
+
+    return def.promise;
+}, setInputs = function(config) {
+    nconf.set('company', config['company']);
+    nconf.set('email', config['email']);
+    nconf.set('password', config['password']);
+    nconf.set('wagePerHour', config['wagePerHour']);
+
+    nconf.save()
+}, getEnoughInputToWork = function() {
+    var company = nconf.get('company'),
+        email = nconf.get('email'),
+        password = nconf.get('password'),
+        wagePerHour = nconf.get('wagePerHour');
+
+    if (company && email && password && wagePerHour) {
+        var def = deferred();
+
+        def.resolve({
+            company: company,
+            email: email,
+            password: password,
+            wagePerHour: wagePerHour
+        });
+
+        return def.promise;
+    } else {
+        var promise = gatherInputs();
+        promise.then(function(configuration){
+            setInputs(configuration);
+        });
+
+        return promise;
+    }
+},
+getWorkingHoursForMonth = function(month, configuration) {
+    var email = configuration.email,
+        password = configuration.password,
+        company = configuration.company,
+        monthDate = moment().subtract(month, 'months'),
+        start = monthDate.startOf('month'),
+        end = monthDate.endOf('month'),
+        dateFormat = 'YYYY-MM-DD',
+        startString = start.format(dateFormat),
+        endString = end.format(dateFormat),
+        url = 'https://weluse.tickspot.com/api/entries?email=' + email + '&password=' + password + '&start_date=' + startString + '&end_date=' + endString;
+
+    request.get(url).on('response', function(response) {
+        if (response.statusCode !== 200) { throw 'API was unreachable'; };
+
+        parseString(response, function (err, result) {
+            console.log(result);
+        });
+
+    })
+    return 12;
+};
+
+program
+    .command('month [monthsAgo]')
+    .description('puts out the hours worked and the money gained')
+    .action(function(monthsAgo){
+        var month = monthsAgo || 0;
+        getEnoughInputToWork().then(function(configuration) {
+            var hoursWorked = getWorkingHoursForMonth(month, configuration),
+                wagePerHour = parseInt(configuration.wagePerHour),
+                wage = hoursWorked * wagePerHour;
+
+            console.log('You worked %s hours, gaining %s Euro', hoursWorked, wage);
+        });
+    });
 
 program
 	.on('*', function(name) {

@@ -3,7 +3,7 @@ wage
 
 # Description
 
-A wage application
+A wage calculating CLI
 
 # Usage
 

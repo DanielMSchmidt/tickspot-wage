@@ -21,9 +21,15 @@
   "license": "MIT",
   "bugs": "https://github.com/DanielMSchmidt/wage/issues",
   "dependencies": {
+    "autocmdr": "~0.0.4",
     "commander": "~2.0.0",
-    "autocmdr": "~0.0.4"
+    "config": "^1.13.0",
+    "deferred": "^0.7.2",
+    "inquirer": "^0.8.4",
+    "moment": "^2.10.3",
+    "nconf": "^0.7.1",
+    "request": "^2.55.0",
+    "xml2js": "^0.4.8"
   },
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }
