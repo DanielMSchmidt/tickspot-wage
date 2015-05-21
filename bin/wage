@@ -6,7 +6,7 @@ var program  = require('commander'),
     inquirer = require('inquirer'),
     deferred = require('deferred'),
     moment = require('moment'),
-    request = require('request'),
+    http = require('http'),
     parseString = require('xml2js').parseString,
     fs = require('fs');
 
@@ -16,7 +16,7 @@ require('autocmdr/lib/completion')(program);
 require('autocmdr/lib/package')(program);
 require('autocmdr/lib/config')(program);
 
-var configPath = process.env['$NODE_CONFIG_DIR'] + '/.wageconfig';
+var configPath = process.env.HOME + '/.wageconfig';
 nconf.file({ file: configPath});
 
 var gatherInputs = function() {
@@ -50,11 +50,10 @@ var gatherInputs = function() {
     var company = nconf.get('company'),
         email = nconf.get('email'),
         password = nconf.get('password'),
-        wagePerHour = nconf.get('wagePerHour');
+        wagePerHour = parseInt(nconf.get('wagePerHour'), 10);
 
     if (company && email && password && wagePerHour) {
         var def = deferred();
-
         def.resolve({
             company: company,
             email: email,
@@ -73,26 +72,36 @@ var gatherInputs = function() {
     }
 },
 getWorkingHoursForMonth = function(month, configuration) {
-    var email = configuration.email,
+    var def = deferred();
+        email = configuration.email,
         password = configuration.password,
         company = configuration.company,
         monthDate = moment().subtract(month, 'months'),
-        start = monthDate.startOf('month'),
-        end = monthDate.endOf('month'),
+        start = monthDate.clone().startOf('month'),
+        end = monthDate.clone().endOf('month'),
         dateFormat = 'YYYY-MM-DD',
         startString = start.format(dateFormat),
         endString = end.format(dateFormat),
-        url = 'https://weluse.tickspot.com/api/entries?email=' + email + '&password=' + password + '&start_date=' + startString + '&end_date=' + endString;
+        url = 'http://weluse.tickspot.com/api/entries?email=' + email + '&password=' + password + '&start_date=' + startString + '&end_date=' + endString;
+    http.get(url, function(res) {
 
-    request.get(url).on('response', function(response) {
-        if (response.statusCode !== 200) { throw 'API was unreachable'; };
-
-        parseString(response, function (err, result) {
-            console.log(result);
+        var xml = '';
+        res.on('data', function(chunk) {
+            xml += chunk;
+            console.log('received: ', chunk);
         });
 
-    })
-    return 12;
+        res.on('end', function() {
+            parseString(xml, function (err, result) {
+                console.log(err, result);
+                def.resolve(result);
+            });
+        });
+    }).end();
+    return def.promise;
+},
+extractHours = function(hours) {
+    console.log(hours);
 };
 
 program
@@ -101,11 +110,14 @@ program
     .action(function(monthsAgo){
         var month = monthsAgo || 0;
         getEnoughInputToWork().then(function(configuration) {
-            var hoursWorked = getWorkingHoursForMonth(month, configuration),
-                wagePerHour = parseInt(configuration.wagePerHour),
-                wage = hoursWorked * wagePerHour;
+            getWorkingHoursForMonth(month, configuration).then(function(workingHours) {
+                var hoursWorked = extractHours(workingHours),
+                    wagePerHour = configuration.wagePerHour,
+                    wage = hoursWorked * wagePerHour;
 
-            console.log('You worked %s hours, gaining %s Euro', hoursWorked, wage);
+                console.log('You worked %s hours, gaining %s Euro', hoursWorked, wage);
+            });
+
         });
     });
 
