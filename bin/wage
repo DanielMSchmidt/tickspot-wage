@@ -7,8 +7,7 @@ var program  = require('commander'),
     deferred = require('deferred'),
     moment = require('moment'),
     http = require('http'),
-    parseString = require('xml2js').parseString,
-    fs = require('fs');
+    parseString = require('xml2js').parseString;
 
 require('autocmdr/lib/logger')(program);
 require('autocmdr/lib/loader')(program);
