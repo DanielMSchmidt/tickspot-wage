@@ -73,27 +73,25 @@ var gatherInputs = function() {
 },
 getWorkingHoursForMonth = function(month, configuration) {
     var def = deferred();
-        email = configuration.email,
-        password = configuration.password,
-        company = configuration.company,
-        monthDate = moment().subtract(month, 'months'),
-        start = monthDate.clone().startOf('month'),
-        end = monthDate.clone().endOf('month'),
-        dateFormat = 'YYYY-MM-DD',
-        startString = start.format(dateFormat),
-        endString = end.format(dateFormat),
-        url = 'http://weluse.tickspot.com/api/entries?email=' + email + '&password=' + password + '&start_date=' + startString + '&end_date=' + endString;
-    http.get(url, function(res) {
+    var email = configuration.email;
+    var password = configuration.password;
+    var company = configuration.company;
+    var monthDate = moment().subtract(month, 'months');
+    var start = monthDate.clone().startOf('month');
+    var end = monthDate.clone().endOf('month');
+    var dateFormat = 'YYYY-MM-DD';
+    var startString = start.format(dateFormat);
+    var endString = end.format(dateFormat);
+    var url = 'http://weluse.tickspot.com/api/entries?email=' + email + '&password=' + password + '&start_date=' + startString + '&end_date=' + endString;
 
+    http.get(url, function(res) {
         var xml = '';
         res.on('data', function(chunk) {
             xml += chunk;
-            console.log('received: ', chunk);
         });
 
         res.on('end', function() {
             parseString(xml, function (err, result) {
-                console.log(err, result);
                 def.resolve(result);
             });
         });
@@ -101,7 +99,13 @@ getWorkingHoursForMonth = function(month, configuration) {
     return def.promise;
 },
 extractHours = function(hours) {
-    console.log(hours);
+    var hoursArray = hours.entries.entry;
+    var _ = require('underscore-node');
+    var totalHours = _.reduce(hoursArray, function(memo, item) {
+        return memo + parseFloat(item.hours[0]._);
+    }, 0);
+
+    return totalHours;
 };
 
 program
