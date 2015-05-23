@@ -105,38 +105,43 @@ extractHours = function(hours) {
     }, 0);
 
     return totalHours;
+},
+wageForMonth = function(month){
+    var def = deferred();
+
+    getEnoughInputToWork().then(function(configuration) {
+        getWorkingHoursForMonth(month, configuration).then(function(workingHours) {
+            var hoursWorked = extractHours(workingHours),
+                wagePerHour = configuration.wagePerHour,
+                wage = hoursWorked * wagePerHour;
+
+            def.resolve({hoursWorked: hoursWorked, wage: wage});
+        });
+    });
+
+    return def.promise;
 };
 
 program
     .command('month [monthsAgo]')
     .description('puts out the hours worked and the money gained')
-    .action(function(monthsAgo){
-        var month = monthsAgo || 0;
-        getEnoughInputToWork().then(function(configuration) {
-            getWorkingHoursForMonth(month, configuration).then(function(workingHours) {
-                var hoursWorked = extractHours(workingHours),
-                    wagePerHour = configuration.wagePerHour,
-                    wage = hoursWorked * wagePerHour;
-
-                console.log('You worked %s hours, gaining %s Euro', hoursWorked, wage);
-            });
-
+    .action(function(monthsAgo) {
+        wageForMonth(monthsAgo).then(function(res) {
+            console.log('You worked %s hours, gaining %s Euro', res.hoursWorked, res.wage);
         });
     });
 
 program
-	.on('*', function(name) {
-		console.log('\''+name+'\' is not a known command. See \'wage --help\':');
-		program.outputHelp();
-		process.exit(1);
-	});
+    .on('*', function(name) {
+        console.log('\''+name+'\' is not a known command. See \'wage --help\':');
+        program.outputHelp();
+        process.exit(1);
+    });
 
 
 program
-	.parse(process.argv);
+    .parse(process.argv);
 
 if (program.args.length < 1 ) {
-	console.log('No command specified. See \'wage --help\':');
-	program.outputHelp();
-	process.exit(1);
+    process.exit(1);
 }
