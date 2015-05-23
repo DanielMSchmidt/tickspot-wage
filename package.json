@@ -1,8 +1,7 @@
 {
   "name": "wage",
-  "version": "0.0.0",
-  "description": "A wage application",
-  "private": true,
+  "version": "0.0.1",
+  "description": "A cli for getting the hours worked and money gained via the tickspot API.",
   "bin": {
     "wage": "./bin/wage"
   },
