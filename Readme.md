@@ -1,4 +1,4 @@
-wage
+Tickspot-Wage
 =============
 
 # Description
