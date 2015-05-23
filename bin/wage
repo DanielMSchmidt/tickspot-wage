@@ -124,7 +124,7 @@ wageForMonth = function(month){
 
 program
     .command('month [monthsAgo]')
-    .description('puts out the hours worked and the money gained')
+    .description('Puts out the hours worked and the money gained. The parameter gives you the possibility to go back in time.')
     .action(function(monthsAgo) {
         wageForMonth(monthsAgo).then(function(res) {
             console.log('You worked %s hours, gaining %s Euro', res.hoursWorked, res.wage);

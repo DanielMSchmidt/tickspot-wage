@@ -1,6 +1,6 @@
 {
   "name": "tickspot-wage",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A cli for getting the hours worked and money gained via the tickspot API.",
   "bin": {
     "wage": "./bin/wage"
