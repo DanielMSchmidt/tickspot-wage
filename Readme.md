@@ -12,7 +12,7 @@ There is a config command (`wage config <property> <value>`) to change these pro
 To install wage from npm, run:
 
 ```
-$ npm install -g wage
+$ npm install -g tickspot-wage
 ```
 
 Run ```wage --help``` to get the existing commands (`wage month` for now).
